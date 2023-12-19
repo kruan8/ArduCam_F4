@@ -6,8 +6,9 @@
  */
 
 #include "hw.h"
-#include <common_f4.h>
-#include <timer.h>
+#include "common_f4.h"
+#include "timer.h"
+#include "clock_f4.h"
 
 #include <stm32f4xx_ll_adc.h>
 #include <stm32f4xx_ll_bus.h>
@@ -35,6 +36,8 @@ bool HW_Init(void)
 {
 
  // WDG_Init(WDG_Timeout_32s);
+
+  Clock_SetPLL(8, 100, 2, CLOCK_SOURCE_HSI);
 
   Timer_Init();
 

@@ -14,6 +14,8 @@
 #include "ArduCam.h"
 #include "protocol.h"
 
+#include "clock_f4.h"
+
 #include "stm32f4xx_ll_rcc.h"
 
 #define APP_ISP6404_CS                PA4
@@ -69,11 +71,15 @@ void App_Init(void)
   spi_Init(g_pSpi1, PA5, PA7, PA6);
   i2c_init(g_pI2c1, PB7, PB6);
 
-  spi_br_e ePrescaler = spi_CalculatePrescaler(RCC_Clocks.PCLK2_Frequency, 33000000);
-  if (!IPS6404_Init(g_pSpi1, APP_ISP6404_CS, ePrescaler))
+  if (!IPS6404_Init(g_pSpi1, APP_ISP6404_CS, 84000000))
   {
     bResult = false;
   }
+
+
+//  Clock_SetHSI();
+//  Clock_SetPLL(8, 100, 2, CLOCK_SOURCE_HSI);
+//  bool bRes = IPS6404_Test();
 
   // initialize SPI2
   spi_Init(g_pSpi2, PB13, PB15, PB14);
@@ -86,7 +92,7 @@ void App_Init(void)
 
   usart_Init(g_pUsart2, _UsartRcvCbk, PA2, PA3, 115200);
 
-  ePrescaler = spi_CalculatePrescaler(RCC_Clocks.PCLK2_Frequency, 2000000);
+  spi_br_e ePrescaler = spi_CalculatePrescaler(RCC_Clocks.PCLK2_Frequency, 2000000);
   ArduCam_Init(g_pSpi1, APP_ARDUCAM_CS, ePrescaler, g_pI2c1);
 
   usart_PrintLn(g_pUsart2, "ACK CMD OV2640 detected. END");
@@ -186,7 +192,7 @@ void _SendImageSerial(void)
      nLen = nBufferSize;
    }
 
-    IPS6404_ReadData(nImagePos, arrData, nLen);
+    IPS6404_ReadBuffer(nImagePos, arrData, nLen);
     usart_Send(g_pUsart2, arrData, nLen);
     usart_WaitForTransmitComplete(g_pUsart2);
 
@@ -210,7 +216,7 @@ bool _SendImageRadio(void)
         nLen = PROT_DATA_PACKET_SIZE;
       }
 
-      IPS6404_ReadData(nImagePos, arrData, sizeof (arrData));
+      IPS6404_ReadBuffer(nImagePos, arrData, sizeof (arrData));
       Prot_InstMediaData(arrData, nLen);
       nImagePos += nLen;
     }

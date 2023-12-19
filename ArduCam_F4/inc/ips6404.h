@@ -13,16 +13,12 @@
 
 #include "spi_f4.h"
 
-bool IPS6404_Init(spi_drv_t* pSpi, gpio_pins_e eCS, spi_br_e ePrescaler);
+bool IPS6404_Init(spi_drv_t* pSpi, gpio_pins_e eCS, uint32_t nMaxFreqMhz);
 void IPS6404_Reset(void);
 uint32_t IPS6404_GetID();
 
-void IPS6404_ReadData(uint32_t nAddr, uint8_t* pBuffer, uint32_t length);
+void IPS6404_ReadBuffer(uint32_t nAddr, uint8_t* pBuffer, uint32_t length);
 void IPS6404_WriteBuffer(uint32_t nAddr, uint8_t* pBuffer, uint32_t length);
-
-void IPS6404_Write_Open(uint32_t nAddr);
-void IPS6404_Write_Write(uint8_t nData);
-void IPS6404_Write_Close(void);
 
 void IPS6404_Write_24bitValue(uint32_t nAddr, uint32_t nValue);
 

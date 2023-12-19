@@ -10,6 +10,7 @@
 #include "spi_f4.h"
 #include "stm32f4xx_ll_spi.h"
 #include "stm32f4xx_ll_bus.h"
+#include "stm32f4xx_ll_rcc.h"
 
 const spi_hw_t spi1_hw =
 {
@@ -32,9 +33,9 @@ const spi_hw_t spi3_hw =
   .irq = SPI3_IRQn,
 };
 
-spi_drv_t _spi1_drv = { &spi1_hw, spi_mode_0, spi_dir_mode_2Lines_FullDuplex, 0, 0, NULL, NULL, false, false, false };
-spi_drv_t _spi2_drv = { &spi2_hw, spi_mode_0, spi_dir_mode_2Lines_FullDuplex, 0, 0, NULL, NULL, false, false, false };
-spi_drv_t _spi3_drv = { &spi3_hw, spi_mode_0, spi_dir_mode_2Lines_FullDuplex, 0, 0, NULL, NULL, false, false, false };
+spi_drv_t _spi1_drv = { &spi1_hw, 0, spi_mode_0, spi_dir_mode_2Lines_FullDuplex, 0, 0, NULL, NULL, false, false, false };
+spi_drv_t _spi2_drv = { &spi2_hw, 0, spi_mode_0, spi_dir_mode_2Lines_FullDuplex, 0, 0, NULL, NULL, false, false, false };
+spi_drv_t _spi3_drv = { &spi3_hw, 0, spi_mode_0, spi_dir_mode_2Lines_FullDuplex, 0, 0, NULL, NULL, false, false, false };
 
 
 
@@ -52,18 +53,24 @@ void spi_Init(spi_drv_t* pDrv, gpio_pins_e eClkPin, gpio_pins_e eMosiPin, gpio_p
     GPIO_SetAFpin(eMisoPin, pDrv->pHW->nGpioAF);
   }
 
+  LL_RCC_ClocksTypeDef RCC_Clocks;
+  LL_RCC_GetSystemClocksFreq(&RCC_Clocks); // Get system clocks
+
   if (pDrv->pHW->reg == SPI1)
   {
     LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SPI1);
+    pDrv->nBusFrequencyHz = RCC_Clocks.PCLK2_Frequency;
   }
 
   if (pDrv->pHW->reg == SPI2)
   {
     LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_SPI2);
+    pDrv->nBusFrequencyHz = RCC_Clocks.PCLK1_Frequency;
   }
   else if (pDrv->pHW->reg == SPI3)
   {
     LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_SPI3);
+    pDrv->nBusFrequencyHz = RCC_Clocks.PCLK1_Frequency;
   }
 
   /* SPI configuration -------------------------------------------------------*/
@@ -159,6 +166,13 @@ spi_br_e spi_CalculatePrescaler(uint32_t nBusClock_Hz, uint32_t nMaxFreq_Hz)
   }
 
   return ePrescaler;
+}
+
+uint32_t spi_GetPrescalerDivider(spi_br_e ePrescaler)
+{
+  const uint8_t DividerTable[] = { 2, 4, 8, 16, 32, 64, 128 };
+
+  return DividerTable[ePrescaler];
 }
 
 void spi_SetMode(spi_drv_t* pDrv, spi_mode_e eMode)

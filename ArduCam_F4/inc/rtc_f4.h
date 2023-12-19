@@ -56,7 +56,8 @@ bool RTCF4_Init(rtc_clock_e eClock, RTC_OnWakeUp pOnWakeUp);
 void RTCF4_Set(dt_t *dt, bool bDate, bool bTime);
 void RTCF4_Get(dt_t *dt);
 int8_t RTCF4_GetTimeZone(void);
-void RTCF4_SetWakeUp(uint16_t nInterval);
+void RTCF4_SetWakeUp(uint16_t nInterval_s);
+void RTC_WriteAccess(bool bEnable);
 
 uint32_t RTCF4_GetNowUnixTimeStamp(void);
 int32_t RTCF4_GetUnixTimeStamp(dt_t* data);

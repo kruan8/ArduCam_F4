@@ -59,6 +59,7 @@ typedef enum
 typedef struct
 {
   spi_hw_t const *   pHW;
+  uint32_t           nBusFrequencyHz;
   spi_mode_e         eMode;
   spi_dir_mode_e     eDirMode;
   volatile uint16_t  nWriteLen;
@@ -85,6 +86,7 @@ uint8_t spi_ReadBidirectionalByte(spi_drv_t* pDrv);
 
 void spi_SetPrescaler(spi_drv_t* pDrv, spi_br_e ePrescaler);
 spi_br_e spi_CalculatePrescaler(uint32_t nBusClock_Hz, uint32_t nMaxFreq_Hz);
+uint32_t spi_GetPrescalerDivider(spi_br_e ePrescaler);
 void spi_SetMode(spi_drv_t* pDrv, spi_mode_e eMode);
 void spi_WaitForNoBusy(spi_drv_t* pDrv);
 void spi_SetDirection(spi_drv_t* pDrv, spi_direction_e bDirection);

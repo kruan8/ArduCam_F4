@@ -22,17 +22,26 @@
 
 #define IPS6404_ID                  0x0D5D46
 
+#define IPS6404_CS_MAX_CLOCK_HZ     125000    // inverted value of max CS low pulse with
+
 static spi_drv_t*          g_pSpi;
 static spi_br_e            g_eSpiPrescaler; // prescaler for SPI interface (communication speed)
 static gpio_pins_e         g_eCS;
+static uint32_t            g_nBurstSize;
 
 void _Send24bit(uint32_t nValue);
 
-bool IPS6404_Init(spi_drv_t* pSpi, gpio_pins_e eCS, spi_br_e ePrescaler)
+bool IPS6404_Init(spi_drv_t* pSpi, gpio_pins_e eCS, uint32_t nMaxFreqMhz)
 {
   g_pSpi = pSpi;
   g_eCS = eCS;
-  g_eSpiPrescaler = ePrescaler;
+
+  // calculate SPI prescaler
+  g_eSpiPrescaler = spi_CalculatePrescaler(pSpi->nBusFrequencyHz, nMaxFreqMhz);
+
+  // calculate burst size (8 uS CS max low pulse with)
+  g_nBurstSize = pSpi->nBusFrequencyHz / spi_GetPrescalerDivider(g_eSpiPrescaler) / IPS6404_CS_MAX_CLOCK_HZ / 8;
+  g_nBurstSize -= 4;    // subtract command + address bytes
 
   // set CS for output
   GPIO_ClockEnable(eCS);
@@ -59,57 +68,63 @@ void IPS6404_Reset(void)
   spi_TransactionEnd(g_pSpi, g_eCS);
 }
 
-void IPS6404_ReadData(uint32_t nAddr, uint8_t* pBuffer, uint32_t length)
+void IPS6404_ReadBuffer(uint32_t nAddr, uint8_t* pBuffer, uint32_t nLength)
 {
-  spi_TransactionBegin(g_pSpi, g_eCS, g_eSpiPrescaler);
-  spi_SendData8(g_pSpi, IPS6404_READ_DATA);
-  _Send24bit(nAddr);
+  uint32_t nBurstSize;
+
+  while (nLength)
+  {
+    spi_TransactionBegin(g_pSpi, g_eCS, g_eSpiPrescaler);
+
+    spi_SendData8(g_pSpi, IPS6404_READ_DATA);
+    _Send24bit(nAddr);
 
 #if IPS6404_READ_DATA == 0x0B
   spi_SendData8(g_pSpi, DUMMY_BYTE);
 #endif
 
-  while (length--)
-  {
-    *pBuffer++ = spi_SendData8(g_pSpi, SPI_DUMMY_BYTE);
+    nBurstSize = g_nBurstSize;
+    if (nBurstSize < nLength)
+    {
+      nBurstSize = nLength;
+    }
+
+    nAddr += nBurstSize;
+    nLength -= nBurstSize;
+    while (nBurstSize--)
+    {
+      *pBuffer++ = spi_SendData8(g_pSpi, SPI_DUMMY_BYTE);
+    }
+
+    spi_TransactionEnd(g_pSpi, g_eCS);
   }
-
-  spi_TransactionEnd(g_pSpi, g_eCS);
-
-  spi_SetPrescaler(g_pSpi, spi_br_2);
 }
 
-void IPS6404_WriteBuffer(uint32_t nAddr, uint8_t* pBuffer, uint32_t length)
+void IPS6404_WriteBuffer(uint32_t nAddr, uint8_t* pBuffer, uint32_t nLength)
 {
-  spi_TransactionBegin(g_pSpi, g_eCS, g_eSpiPrescaler);
-  spi_SendData8(g_pSpi, IPS6404_WRITE_DATA);
-  _Send24bit(nAddr);
-  while (length--)
+  uint32_t nBurstSize;
+
+  while (nLength)
   {
-    spi_SendData8(g_pSpi, *pBuffer++);
+    spi_TransactionBegin(g_pSpi, g_eCS, g_eSpiPrescaler);
+    spi_SendData8(g_pSpi, IPS6404_WRITE_DATA);
+    _Send24bit(nAddr);
+
+    nBurstSize = g_nBurstSize;
+    if (nBurstSize < nLength)
+    {
+      nBurstSize = nLength;
+    }
+
+    nAddr += nBurstSize;
+    nLength -= nBurstSize;
+    while (nBurstSize--)
+    {
+      spi_SendData8(g_pSpi, *pBuffer++);
+    }
+
+    spi_TransactionEnd(g_pSpi, g_eCS);
   }
-
-  spi_WaitForNoBusy(g_pSpi);
-  spi_TransactionEnd(g_pSpi, g_eCS);
-}
-
-void IPS6404_Write_Open(uint32_t nAddr)
-{
-  spi_TransactionBegin(g_pSpi, g_eCS, g_eSpiPrescaler);
-  spi_SendData8(g_pSpi, IPS6404_WRITE_DATA);
-  _Send24bit(nAddr);
-  spi_WaitForNoBusy(g_pSpi);
-}
-
-void IPS6404_Write_Write(uint8_t nData)
-{
-  spi_SendData8(g_pSpi, nData);
-}
-
-void IPS6404_Write_Close(void)
-{
-  spi_WaitForNoBusy(g_pSpi);
-  spi_TransactionEnd(g_pSpi, g_eCS);
 }
 
 void IPS6404_Write_24bitValue(uint32_t nAddr, uint32_t nValue)
@@ -147,11 +162,11 @@ void _Send24bit(uint32_t nValue)
 
 bool IPS6404_Test(void)
 {
-  uint8_t arrDataW[] = { 10, 11, 12, 13, 14, 15 };
+  uint8_t arrDataW[100] = { };
   uint8_t arrDataR[sizeof (arrDataW)];
 
   IPS6404_WriteBuffer(0, arrDataW, sizeof (arrDataW));
-  IPS6404_ReadData(0, arrDataR, sizeof (arrDataR));
+  IPS6404_ReadBuffer(0, arrDataR, sizeof (arrDataR));
 
   if (memcmp(arrDataW, arrDataR, sizeof (arrDataW)) != 0)
   {

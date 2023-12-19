@@ -140,26 +140,48 @@ void _WaitForSynchro_RTC(void)
   }
 }
 
-//void RTCF4_SetWakeUp(uint16_t nInterval)
-//{
-//  RTC->WPR = 0xCA; /* (7) */
-//  RTC->WPR = 0x53; /* (7) */
-//  RTC->CR &=~ RTC_CR_WUTE; /* (8) */
-//  while((RTC->ISR & RTC_ISR_WUTWF) != RTC_ISR_WUTWF) /* (9) */
-//  {
-//    /* add time out here for a robust application */
-//  }
-//
-//  RTC->WUTR = nInterval - 1;  // WUTR je delicka, takže 0 znamena 1 impulz
-//  RTC->CR = RTC_CR_WUCKSEL_2 | RTC_CR_WUTE | RTC_CR_WUTIE; /* (11) */
-//  RTC->WPR = 0xFE; /* (12) */
-//  RTC->WPR = 0x64; /* (12) */
-//
-//  EXTI->IMR |= EXTI_IMR_IM20;       // unmask line 20
-//  EXTI->RTSR |= EXTI_RTSR_TR20;     // Rising edge for line 20
-//  NVIC_SetPriority(RTC_IRQn, 0);    // Set priority
-//  NVIC_EnableIRQ(RTC_IRQn);         // Enable RTC_IRQn
-//}
+void RTCF4_SetWakeUp(uint16_t nInterval_s)
+{
+  RTC_WriteAccess(true);
+  LL_RTC_WAKEUP_Disable(RTC);
+  while(!LL_RTC_IsActiveFlag_WUTW(RTC)) // wait for enabled
+  {
+    /* add time out here for a robust application */
+  }
+
+  LL_RTC_ClearFlag_WUT(RTC);
+  LL_RTC_WAKEUP_SetAutoReload(RTC, nInterval_s - 1);  // WUTR je delicka, takže 0 znamena 1 impulz
+  LL_RTC_WAKEUP_SetClock(RTC, LL_RTC_WAKEUPCLOCK_CKSPRE);  // clock source
+  LL_RTC_EnableIT_WUT(RTC);                   // enable INT
+  LL_RTC_WAKEUP_Enable(RTC);
+
+  // Disable write access
+  RTC_WriteAccess(false);
+
+  EXTI->IMR |= EXTI_IMR_IM20;       // unmask line 20
+  EXTI->RTSR |= EXTI_RTSR_TR20;     // Rising edge for line 20
+  NVIC_SetPriority(RTC_WKUP_IRQn, 0);    // Set priority
+  NVIC_EnableIRQ(RTC_WKUP_IRQn);         // Enable RTC_IRQn
+}
+
+// Enable/disable write access to RTC registers
+void RTC_WriteAccess(bool bEnable)
+{
+  if (bEnable)
+  {
+    // Enable write in RTC domain control register
+    PWR->CR |= PWR_CR_DBP;
+    // Enable write access
+    LL_RTC_DisableWriteProtection(RTC);
+  }
+  else
+  {
+    // Disable write access
+    LL_RTC_EnableWriteProtection(RTC);
+
+    PWR->CR &= ~PWR_CR_DBP;
+  }
+}
 
 void RTCF4_Set(dt_t *dt, bool bDate, bool bTime)
 {
@@ -237,6 +259,8 @@ uint8_t RTCF4_Bcd2ToByte(uint8_t Value)
   tmp = ((uint8_t)(Value & (uint8_t)0xF0) >> (uint8_t)0x4) * 10;
   return (tmp + (Value & (uint8_t)0x0F));
 }
+
+
 
 //void RTCF4_IRQHandler(void)
 //{
