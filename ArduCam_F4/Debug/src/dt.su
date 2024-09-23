@@ -1,2 +1,0 @@
-dt.c:27:9:DT_GetUnixTime	32	static
-dt.c:55:6:DT_GetDateTimeFromUnix	24	static

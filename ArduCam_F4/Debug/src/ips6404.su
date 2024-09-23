@@ -1,9 +1,0 @@
-ips6404.c:34:6:IPS6404_Init	40	static
-ips6404.c:61:6:IPS6404_Reset	8	static
-ips6404.c:71:6:IPS6404_ReadBuffer	40	static
-ips6404.c:103:6:IPS6404_WriteBuffer	32	static
-ips6404.c:130:6:IPS6404_Write_24bitValue	16	static
-ips6404.c:135:10:IPS6404_GetID	16	static
-ips6404.c:151:12:IPS6404_GetDrv	4	static
-ips6404.c:156:6:_Send24bit	16	static
-ips6404.c:163:6:IPS6404_Test	208	static
