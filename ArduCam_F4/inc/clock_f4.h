@@ -35,7 +35,7 @@ typedef enum
  *         nP: Main PLL division factor for main system clock (divider behind PLL). This value can be 2, 4, 6 or 8.
  * @retval None
  */
-void Clock_SetPLL(uint32_t nM, uint32_t nN, uint32_t nP, Clock_Source_e eClockSource);
+void Clock_SetPLLasSysClk(uint32_t nM, uint32_t nN, uint32_t nP, Clock_Source_e eClockSource);
 void Clock_SetHSI(void);
 
 #endif /* CLOCK_F4_H_ */

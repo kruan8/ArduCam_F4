@@ -33,10 +33,9 @@ const spi_hw_t spi3_hw =
   .irq = SPI3_IRQn,
 };
 
-spi_drv_t _spi1_drv = { &spi1_hw, 0, spi_mode_0, spi_dir_mode_2Lines_FullDuplex, 0, 0, NULL, NULL, false, false, false };
-spi_drv_t _spi2_drv = { &spi2_hw, 0, spi_mode_0, spi_dir_mode_2Lines_FullDuplex, 0, 0, NULL, NULL, false, false, false };
-spi_drv_t _spi3_drv = { &spi3_hw, 0, spi_mode_0, spi_dir_mode_2Lines_FullDuplex, 0, 0, NULL, NULL, false, false, false };
-
+spi_drv_t _spi1_drv = { &spi1_hw, 0, spi_mode_0, spi_dir_mode_2Lines_FullDuplex, false, false, false };
+spi_drv_t _spi2_drv = { &spi2_hw, 0, spi_mode_0, spi_dir_mode_2Lines_FullDuplex, false, false, false };
+spi_drv_t _spi3_drv = { &spi3_hw, 0, spi_mode_0, spi_dir_mode_2Lines_FullDuplex, false, false, false };
 
 
 void spi_Init(spi_drv_t* pDrv, gpio_pins_e eClkPin, gpio_pins_e eMosiPin, gpio_pins_e eMisoPin)

@@ -37,7 +37,8 @@ bool HW_Init(void)
 
  // WDG_Init(WDG_Timeout_32s);
 
-  Clock_SetPLL(8, 100, 2, CLOCK_SOURCE_HSI);
+  // 16 / 8 * 100 / 2 = 100Mhz
+  Clock_SetPLLasSysClk(8, 100, 2, CLOCK_SOURCE_HSI);
 
   Timer_Init();
 

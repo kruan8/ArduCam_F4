@@ -14,8 +14,19 @@
 
 /**
  * Set PLL as SYSCLK
+ *
+ * @param nPll_M - Division factor for the main PLL (PLL) input clock
+ *                 Caution: The software has to set these bits correctly to ensure that the VCO input frequency
+ *                          ranges from 1 to 2 MHz (recomended 1MHz). It is recommended to select a frequency of 2 MHz to limit PLL jitter.
+ * @param nPll_N - Main PLL (PLL) multiplication factor for VCO
+ *                 Caution: The software has to set these bits correctly to ensure that the VCO output
+ *                          frequency is between 100 and 432 MHz.
+ * @param nPll_P - Main PLL (PLL) division factor for main system clock
+ *                 Caution: The software has to set these bits correctly not to exceed 100 MHz on this domain.
+ *                          PLL output clock frequency = VCO frequency / PLLP with PLLP = 2, 4, 6, or 8
+ * @param eClockSource - HSI/HSE clock to select
  */
-void Clock_SetPLL(uint32_t nPll_M, uint32_t nPll_N, uint32_t nPll_P, Clock_Source_e eClockSource)
+void Clock_SetPLLasSysClk(uint32_t nPll_M, uint32_t nPll_N, uint32_t nPll_P, Clock_Source_e eClockSource)
 {
   uint16_t nTimeout;
 
@@ -67,6 +78,33 @@ void Clock_SetPLL(uint32_t nPll_M, uint32_t nPll_N, uint32_t nPll_P, Clock_Sourc
 
   /* Update system core clock variable */
   SystemCoreClockUpdate();
+}
+
+/**
+ * Configure PLL_I2S
+ *
+ * @param nPll_M - Division factor for the audio PLL (PLLI2S) input clock
+ *                  Caution: The software has to set these bits correctly to ensure that the VCO input frequency
+ *                           ranges from 1 to 2 MHz.It is recommended to select a frequency of 2 MHz to limit PLL jitter.
+ * @param nPll_N - PLLI2S multiplication factor for VCO
+ *                 Caution: The software has to set these bits correctly to ensure that the VCO output
+ *                          frequency is between 100 and 432 MHz. With VCO input frequency ranges from 1
+ *                          to 2 MHz (refer to Figure 13 and divider factor M of the RCC PLL configuration register (RCC_PLLCFGR))
+ * @param nPll_R - PLLI2S division factor for I2S clocks
+ *                 Caution: The I2Ss requires a frequency lower than or equal to 192 MHz to work correctly.
+ *                          I2S clock frequency = VCO frequency / PLLR with 2 <= PLLR <= 7
+ */
+void Clock_SetPLL_I2S(uint32_t nPll_M, uint32_t nPll_N, uint32_t nPll_R)
+{
+  uint16_t nTimeout;
+
+//  LL_RCC_PLLI2S_ConfigDomain_I2S(eClockSource, nPll_M, nPll_N, (((nPll_P >> 1) - 1) << RCC_PLLCFGR_PLLP_Pos));
+
+  LL_RCC_PLLI2S_Enable();
+
+  /* Wait till PLL is ready */
+  nTimeout = 0xFFFF;
+  while (!LL_RCC_PLLI2S_IsReady() && nTimeout--);
 }
 
 /**

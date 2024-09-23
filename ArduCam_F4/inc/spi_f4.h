@@ -62,10 +62,10 @@ typedef struct
   uint32_t           nBusFrequencyHz;
   spi_mode_e         eMode;
   spi_dir_mode_e     eDirMode;
-  volatile uint16_t  nWriteLen;
-  volatile uint16_t  nReadLen;
-  volatile uint8_t*  pWrite;
-  volatile uint8_t*  pRead;
+//  volatile uint16_t  nWriteLen;
+//  volatile uint16_t  nReadLen;
+//  volatile uint8_t*  pWrite;
+//  volatile uint8_t*  pRead;
 
   volatile bool bError;
 
