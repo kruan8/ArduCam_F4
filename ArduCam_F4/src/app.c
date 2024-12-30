@@ -68,8 +68,10 @@ void App_Init(void)
   LL_RCC_ClocksTypeDef RCC_Clocks;
   LL_RCC_GetSystemClocksFreq(&RCC_Clocks); // Get system clocks
 
+  HW_SetCamSupply(true);
+
   spi_Init(g_pSpi1, PA5, PA7, PA6);
-  i2c_init(g_pI2c1, PB7, PB6);
+  i2c_init(g_pI2c1, PB9, PB8);
 
   if (!IPS6404_Init(g_pSpi1, APP_ISP6404_CS, 84000000))
   {
@@ -80,9 +82,6 @@ void App_Init(void)
 //  Clock_SetHSI();
 //  Clock_SetPLL(8, 100, 2, CLOCK_SOURCE_HSI);
 //  bool bRes = IPS6404_Test();
-
-  // initialize SPI2
-  spi_Init(g_pSpi2, PB13, PB15, PB14);
 
   //  ePrescaler = spi_CalculatePrescaler(RCC_Clocks.PCLK1_Frequency, 10000000);
   //  if (!SI4463_Init(g_pSpi2))

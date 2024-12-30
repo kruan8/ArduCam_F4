@@ -21,12 +21,16 @@
 #define BOARD_LED_OFF            GPIO_SETPIN(BOARD_LED)
 
 // CAMERA supply transistor
-#define HW_CAM_SUPPLY            PB9
+#define HW_CAM_SUPPLY            PB10
 #define HW_CAM_SUPPLY_ON         GPIO_RESETPIN(HW_CAM_SUPPLY)
 #define HW_CAM_SUPPLY_OFF        GPIO_SETPIN(HW_CAM_SUPPLY)
 
-#define HW_BAT                   PA0
-#define APP_ADC_BAT_INPUT        ADC_CHANNEL_0_NUMBER  // (PA0)
+#define HW_BAT_CTRL              PA1
+#define HW_BAT_CTRL_ON           GPIO_RESETPIN(HW_BAT_CTRL)
+#define HW_BAT_CTRL_OFF          GPIO_SETPIN(HW_BAT_CTRL)
+
+#define HW_BAT                   PA2
+#define APP_ADC_BAT_INPUT        ADC_CHANNEL_2_NUMBER  // (PA0)
 #define APP_ADC_CONV             8       // pocet konverzi pro teplomer
 
 static uint16_t                  g_nVoltage = 0;                 // measured voltage from modem task
@@ -45,14 +49,17 @@ bool HW_Init(void)
   HW_ReadCPUID();
 
   // configure board LED
-  GPIO_ConfigPin(BOARD_LED, mode_output, outtype_pushpull, pushpull_no, speed_low);
   BOARD_LED_OFF;
+  GPIO_ConfigPin(BOARD_LED, mode_output, outtype_pushpull, pushpull_no, speed_low);
 
   // configure CAM supply pin
-  GPIO_ConfigPin(HW_CAM_SUPPLY, mode_analog, outtype_pushpull, pushpull_down, speed_low);
+  GPIO_ConfigPin(HW_CAM_SUPPLY, mode_output, outtype_pushpull, pushpull_down, speed_low);
 
-  // configure BAT analog pin
-  //GPIO_ConfigPin(HW_BAT, mode_analog, outtype_pushpull, pushpull_down, speed_low);
+  // configure VBAT control pin
+  GPIO_ConfigPin(HW_BAT_CTRL, mode_output, outtype_pushpull, pushpull_no, speed_low);
+
+  // configure VBAT measure pin
+  GPIO_ConfigPin(HW_BAT, mode_analog, outtype_pushpull, pushpull_down, speed_low);
 
   HW_AdcInit();
 
@@ -62,6 +69,11 @@ bool HW_Init(void)
 void HW_SetBoardLed(bool bOn)
 {
   bOn ? BOARD_LED_ON : BOARD_LED_OFF;
+}
+
+void HW_SetVbatSupplyCtrl(bool bOn)
+{
+  bOn ? HW_BAT_CTRL_ON : HW_BAT_CTRL_OFF;
 }
 
 void HW_SetCamSupply(bool bOn)

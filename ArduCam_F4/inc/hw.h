@@ -19,6 +19,7 @@
 
 bool HW_Init(void);
 void HW_SetBoardLed(bool bOn);
+void HW_SetVbatSupplyCtrl(bool bOn);
 void HW_SetCamSupply(bool bOn);
 //void HW_ChangeClock(hw_clock_e eAHBPresc);
 
